@@ -1,0 +1,12 @@
+# your own, never committed
+scoring_prompt.md
+workflow/job-scanner.local.json
+make_export.py
+companies/
+*.n8n.json
+!workflow/job-scanner.workflow.json
+
+# noise
+.DS_Store
+__pycache__/
+node_modules/

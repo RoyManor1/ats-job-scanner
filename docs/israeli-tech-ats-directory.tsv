@@ -1,0 +1,119 @@
+company	ats	board	note
+Adjust	greenhouse	adjustjobs	German co. owned by AppLovin; board active
+Anodot	unknown		anodot.com/jobs; No ATS embed visible
+Autotalks	comeet		auto-talks.com careers still Comeet-hosted; old UID 03.009 dead; account deactivated
+Cognata	other		custom WordPress; cognata.com/hiring; apply via email
+Cyberbit	other		BambooHR (rangeforce); Merged with RangeForce
+Cynerio	acquired		Axonius
+Deepchecks	other		email/custom
+Eureka	acquired		Tenable
+Gem Security	acquired		Wiz
+GuardKnox	comeet		account deactivated
+Illustria	unknown		Site unreachable
+K Health	greenhouse	khealthcareers	
+Kubiya	other		custom site
+Magic Software	other		email/custom
+Namogoo	acquired		AB Tasty
+Novee	comeet		Comeet-hosted, UID not found
+Outbrain	greenhouse	outbraininc	EU board (now Teads)
+Piiano	acquired		Autonomous Security
+Prompt Security	acquired		SentinelOne; Aug 2025
+Riseup	other		custom WordPress; email jobs@riseup.co.il
+Sightful	comeet		account deactivated
+Spera	acquired		Okta
+Syte	comeet		account deactivated
+Tower Semiconductor	other		SuccessFactors
+Varonis	other		Jobvite; jobs.jobvite.com/varonis-internal
+Vicarius	unknown		vicarius.io/career
+Weka	greenhouse	wekatest	
+env0	other		custom site; Renamed env zero
+Aim Security	unknown		aim.security blocks fetch
+Aporia	acquired		Coralogix
+Bluevine	greenhouse	bluevineisrael	also bluevineus, bluevineindia
+Cyabra	comeet		account deactivated
+Cyberpion	comeet	ionix	now IONIX
+Cyolo	comeet	cyolo	
+Digital Owl	acquired		Datavant
+Exodigo	comeet	exodigo	
+Glassbox	other		custom site; old comeet 53.00C inactive
+Hibob	other		Hibob native careers; careers.hibob.com
+Imperva	acquired		Thales
+Karamba	comeet		account deactivated
+Lasso	comeet	lassosecurity	
+Miggo	other		BambooHR; miggo.bamboohr.com
+Navan	greenhouse	tripactions	
+Opsys	other		custom site
+Payem	unknown		listings not exposed
+Placer.ai	unknown		ATS not found
+Pyramid Analytics	unknown		ATS not found
+Satori	acquired		Commvault
+Silicom	other		custom site
+Splitit	other		BambooHR; splitit.bamboohr.com
+Tenzir	other		Workable; German company
+TytoCare	other		custom site; comeet E5.003 inactive
+Vayyar	other		Workable; apply.workable.com/vayyar
+Vimeo	greenhouse	vimeo	job-boards.greenhouse.io/vimeo
+Wing Security	acquired		With Wings
+ironSource	acquired		Unity; Unity greenhouse slug unity3d
+Alpha Tau	other		custom site
+Arbe	comeet	arbe	
+Charm Security	other		Team8 careers portal / LinkedIn
+Cybellum	comeet	cybellum	LG-owned
+Cyclops	other		JazzHR; cyclopsio.applytojob.com
+D-ID	other		Workable
+Ecoppia	other		custom site
+Formula Systems	unknown		holding company
+Gomboc	other		email only
+Hour One	unknown		site unreachable
+Ituran	unknown		careers blocked
+Kenshoo	comeet	skai	renamed Skai
+Lightbits	other		custom site
+Mobileye	lever	jobs.eu.lever.co/mobileye	EU Lever
+Nexar	other		Teamtailor; careers.getnexar.com
+Opus Security	acquired		Orca Security
+Pentera	comeet	pentera	
+Plarium	other		custom site; no vacancies
+QwilT	comeet	qwilt	deactivated
+SentinelOne	greenhouse	sentinellabs	also sentinelonecz
+Simplex	acquired		Nuvei
+Sqream	comeet	sqream	deactivated
+ThinkCyber	unknown		
+Unity	greenhouse	unity3d	careers.unity.com
+Vee	unknown		
+Viz.ai	ashby	viz.ai	
+Wix	other		custom site; careers.wix.com
+monday.com	other		custom site; monday.com/careers
+Amdocs	other		Eightfold; jobs.amdocs.com
+Arnica	other		LinkedIn-only
+Check Point	other		custom; careers.checkpoint.com
+CyberArk	acquired		Palo Alto Networks; deal closed 2026
+Cyfirma	other		custom; Singapore/India company
+Deep Instinct	comeet	deepinstinct	deactivated
+Entitle	acquired		BeyondTrust
+Fundbox	other		HiBob; fundbox.careers.hibob.com
+Green Invoice / Morning	comeet	green-invoice	redirects to Comeet home
+Icount	other		custom
+Jit	other		custom; apply via email
+Kornit	comeet	kornit	
+Liquidity Group	comeet	liquiditygroup	redirects to Comeet home
+Next Insurance	greenhouse	nextinsurance66	
+Ottopia	comeet	ottopia	deactivated
+Perion	greenhouse	perionnetworkltd	
+Playtika	comeet	playtika	redirects to Comeet home
+Radware	other		Taleo; radware.taleo.net
+Sight Diagnostics	comeet	sight	deactivated
+Speedata	other		custom; Wix site
+Stratasys	other		SuccessFactors
+ThriveDX	comeet	thrivedx	deactivated
+Valens	other		custom
+Verbit	comeet	verbit	deactivated
+Waze	acquired		Google
+Zebra Medical	acquired		Nanox; Nanox already in sheet
+NVIDIA	workday	nvidia|wd5|NVIDIAExternalCareerSite	country facet key locationHierarchy1 (per-tenant id)
+KLA	workday	kla|wd1|Search	country facet key Country (Workday-wide id)
+Applied Materials	workday	amat|wd1|External	country facet key Country (Workday-wide id)
+Philips	workday	philips|wd3|jobs-and-careers	country facet key locationHierarchy1 (per-tenant id)
+Salesforce	workday	salesforce|wd12|External_Career_Site	country facet key is a long custom CF_ field
+Cisco	workday	cisco|wd5|Cisco_Careers	endpoint works but exposes no usable country facet
+eBay	workday	ebay|wd5|apply	endpoint works but exposes no usable country facet
+PayPal	workday	paypal|wd1|jobs	endpoint works but exposes no usable country facet

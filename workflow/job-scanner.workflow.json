@@ -1,0 +1,671 @@
+{
+  "name": "Roy — Morning Job Scan",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "every-morning",
+      "name": "Every morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-0",
+              "name": "sheet_id",
+              "type": "string",
+              "value": "PASTE_GOOGLE_SHEET_ID_HERE"
+            },
+            {
+              "id": "cfg-1",
+              "name": "email_to",
+              "type": "string",
+              "value": "you@example.com"
+            },
+            {
+              "id": "cfg-2",
+              "name": "model",
+              "type": "string",
+              "value": "claude-sonnet-5"
+            },
+            {
+              "id": "cfg-3",
+              "name": "max_to_score",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "id": "cfg-4",
+              "name": "system_prompt",
+              "type": "string",
+              "value": "# Job scorer system prompt (template)\n\nCopy this to `scoring_prompt.md`, fill in the two sections marked TODO, and the generator\nwill pick your version up instead of this one. `scoring_prompt.md` is git-ignored, because\nan honest version of it contains a candid self-assessment you probably do not want indexed.\n\nThe scoring bands below are the part worth stealing. They exist because an unweighted\n\"how good a fit is this\" prompt quietly rewards prestige: a big-name company drags every\nposting upward. Banding the role types first, and capping the band a role can reach,\nkeeps the tier driven by the work rather than the logo.\n\n---\n\nYou are a job-fit scorer working for one specific candidate. Every morning you receive one\njob posting at a time and decide whether it is worth their attention. You are strict: the\ndaily email is only useful if most of what it contains is worth applying to. When in doubt,\nscore lower.\n\n## Who the candidate is\n\nTODO: 8-12 lines. Location, study or career stage, languages, availability, what they are\ngoing after, and any hard requirement (for example \"must be an English-speaking company\").\nBe specific about constraints; vague candidates produce vague scores.\n\n### Evidence they can point to\n\nTODO: 4-8 bullets of real, checkable work, with outcomes including the negative ones. Name the\ntools they genuinely use and, just as importantly, the ones they do not. State plainly what\nthey are not, for example \"not a software engineer and should not be scored as one\" — that\nsingle line removes most false positives.\n\n## Hard disqualifiers (any one of these -> tier \"SKIP\", score 0)\n\nTODO: 4-8 numbered rules. Typical ones: wrong language market, seniority the posting itself\nrules out, job functions outside the target track, a required language the candidate lacks,\na schedule conflict, wrong location.\n\n## Scoring (0–100) for everything that survives\n- **Experience transfer (0–40):** how directly the day-to-day builds toward the seat the candidate actually wants first. They are aiming for an operating or analytical seat, not a pure prospecting seat. Score by band:\n  - **34–40 — operating and analytical core.** Sales operations, revenue operations, GTM operations, marketing operations, business operations / BizOps, growth operations; business / sales / marketing / product / data analyst inside a commercial team; strategy and planning; chief of staff or founder's office; program or project management inside a GTM org.\n  - **26–33 — commercial with real analytical or building content.** BDR, business development, partnerships and alliances, customer success operations, enablement, deal desk, pricing, market intelligence, GTM engineering. Anything that pairs a commercial remit with analysis or systems work.\n  - **18–25 — pure outbound and quota seats.** SDR, outbound prospecting, account executive, account manager. These are genuinely acceptable to the candidate and should still reach him, but they would rather start in an operating seat, so an SDR role must not outrank an equivalent-quality ops or analyst role. Never push one of these above 25 on this dimension, however good the company is.\n  - **8–17 — adjacent.** Product operations, customer-facing implementation or support at a tech company, generalist rotational or graduate business programs.\n  - **0–7 —** anything else that is still a real tech-company seat.\n\n  When a posting could sit in two bands, read the day-to-day responsibilities rather than the title: a \"Sales Development Representative\" whose scope is really list-building, CRM hygiene and pipeline reporting belongs in the 26–33 band; a \"Revenue Operations Associate\" who in practice just cold-calls belongs in the 18–25 band. BDR consistently outranks SDR where both appear.\n- **Reachability (0–25):** how realistically a candidate at the target seniority, with the evidence above, gets this. Explicit student / intern / junior / entry-level / \"0–2 years\" = 20–25. Unstated seniority with a junior-sounding scope = 10–19. Wants 2–3 years but the scope matches the evidence above = 5–12.\n- **Company quality (0–20):** as a name on a CV and as a place to learn. Well-known international tech company or a well-funded startup with a real GTM org = 15–20. Solid but lesser-known = 8–14. Unknown / thin = 0–7.\n- **Fit with his profile (0–15):** the posting explicitly values things the candidate has, taken from the evidence section above. Each clear hit is worth ~4 points.\n\n**Tiers:** HOT = 70–100 (apply today). WARM = 50–69 (worth a look). SKIP = below 50 or disqualified.\n\n## Output\nReturn ONLY a JSON object, no prose, no markdown fences:\n\n{\n  \"score\": <integer 0–100>,\n  \"tier\": \"HOT\" | \"WARM\" | \"SKIP\",\n  \"role_family\": \"Sales Ops / RevOps\" | \"GTM / Growth Ops\" | \"Marketing Ops\" | \"BizOps / Strategy / Chief of Staff\" | \"Analyst\" | \"BDR / Partnerships\" | \"SDR / Outbound\" | \"Account Management\" | \"Customer / Implementation\" | \"Other\",\n  \"seniority_read\": \"student/intern\" | \"junior/entry\" | \"unstated\" | \"mid\" | \"senior\",\n  \"why_fit\": \"<one sentence, specific to THIS posting, naming the one thing in the candidate's evidence that maps to it>\",\n  \"gap\": \"<one sentence, the most likely reason he would be rejected, stated honestly>\",\n  \"angle\": \"<one sentence: the strongest opening line or proof point the candidate should lead with if he applies, or empty string if SKIP>\",\n  \"disqualifier\": \"<the disqualifier number and reason if SKIP because of one, else empty string>\"\n}\n\nRules: never invent experience the candidate doesn't have. Do not inflate: a Senior Sales Ops Manager role is a SKIP even if the topic is perfect. A German-speaking BDR role is a SKIP even if the company is perfect. Do not let a strong company name drag a pure SDR role into HOT: the tier is set by the work, and the candidate's stated preference is to start in an operating or analytical seat.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Companies"
+        },
+        "options": {}
+      },
+      "id": "get-companies",
+      "name": "Get Companies",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -760,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// One item per active company → the public JSON feed URL for its ATS.\nconst out = [];\nfor (const item of $input.all()) {\n  const c = item.json;\n  const active = String(c.active ?? 'yes').trim().toLowerCase();\n  if (['no', 'false', '0', 'off'].includes(active)) continue;\n  const ats = String(c.ats || '').trim().toLowerCase();\n  const slug = String(c.slug || '').trim();\n  if (!ats || !slug) continue;\n  let url = null;\n  if (ats === 'greenhouse') url = `https://boards-api.greenhouse.io/v1/boards/${slug}/jobs`; // no content=true: descriptions are fetched per candidate later (memory)\n  else if (ats === 'lever') url = `https://api.lever.co/v0/postings/${slug}?mode=json`;\n  else if (ats === 'lever-eu') url = `https://api.eu.lever.co/v0/postings/${slug}?mode=json`; // EU-hosted Lever (e.g. Mobileye)\n  else if (ats === 'ashby') url = `https://api.ashbyhq.com/posting-api/job-board/${slug}`;\n  else if (ats === 'comeet') {\n    // slug = \"<company_uid>|<token>\" copied from the company's careers page source\n    const [uid, token] = slug.split('|');\n    if (uid && token) url = `https://www.comeet.co/careers-api/2.0/company/${uid}/positions?token=${token}`; // details fetched per candidate later\n  }\n  if (!url) continue;\n  out.push({ json: { company: c.company || slug, ats, slug, url, type: c.type || '' } });\n}\nreturn out;"
+      },
+      "id": "build-feed-urls",
+      "name": "Build Feed URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 6,
+              "batchInterval": 300
+            }
+          },
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-feed",
+      "name": "Fetch Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        160
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Runs once per response item. n8n resolves which company the item came from (its paired input item),\n// which the Code node cannot see in \"all items\" mode — so we stamp the source onto each item here.\nlet src = {};\ntry { src = $('Build Feed URLs').item.json; } catch (e) { src = {}; }\nreturn { json: { src, body: $input.item.json } };"
+      },
+      "id": "tag-feed-items",
+      "name": "Tag Feed Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn every ATS response into one flat item per job. Keeps only Israel / remote / unspecified locations.\nconst IL = /israel|tel.?aviv|tlv|herzliya|herzelia|hertzelia|haifa|ramat gan|petah|petach|jerusalem|ra'?anana|netanya|beer.?sheva|be'er sheva|rehovot|kfar saba|hod hasharon|rosh ha|yokneam|caesarea|holon|modi'?in|bnei brak|or yehuda|airport city|kiryat|^il$/i;\nconst REMOTE = /remote|anywhere|worldwide|distributed/i;\nconst OTHER_COUNTRY = /\\b(us|usa|u\\.s\\.?a?|united states|america|uk|united kingdom|england|london|germany|berlin|munich|france|paris|canada|toronto|india|bangalore|emea|europe|eu|apac|latam|australia|sydney|singapore|japan|tokyo|poland|warsaw|spain|madrid|barcelona|netherlands|amsterdam|ireland|dublin|brazil|mexico|portugal|lisbon|ukraine|kyiv|romania|bulgaria|serbia|czech|prague|austria|switzerland|sweden|stockholm|denmark|norway|finland|italy|milan|greece|turkey|uae|dubai|new york|nyc|san francisco|austin|boston|chicago|seattle|denver|atlanta|texas|california|remote[ -]*us|alabama|alaska|arizona|arkansas|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new hampshire|new jersey|new mexico|north carolina|north dakota|ohio|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee|utah|vermont|virginia|washington|wisconsin|wyoming|philadelphia|los angeles|san diego|san jose|miami|phoenix|dallas|houston|portland|vancouver|montreal|ottawa|hong kong|china|beijing|shanghai|shenzhen|korea|seoul|taiwan|vietnam|philippines|manila|indonesia|thailand|bangkok|malaysia|south africa|nigeria|kenya|egypt|argentina|buenos aires|colombia|chile|peru|hungary|budapest|lithuania|vilnius|latvia|estonia|tallinn|croatia|slovakia|slovenia|belgium|brussels|luxembourg|scotland|edinburgh|manchester|new zealand|auckland|saudi|riyadh|qatar|doha|cyprus|malta)\\b/i;\nconst strip = s => String(s || '')\n  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '\"').replace(/&#39;|&rsquo;|&lsquo;/g, \"'\").replace(/&nbsp;/g, ' ')\n  .replace(/<br\\s*\\/?>|<\\/p>|<\\/li>|<\\/h\\d>/gi, '\\n').replace(/<[^>]+>/g, ' ')\n  .replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim();\n\nconst out = [];\nconst okIdx = new Set(), failIdx = new Set();\nlet feedsOk = 0, feedsFailed = 0;\n\n$input.all().forEach((item, i) => {\n  const src = item.json.src || {};\n  const idx = src.url || i; // one feed = one URL; Lever/Comeet arrays arrive split into many items sharing a URL\n  const body = item.json.body;\n  if (!body || body.error) { failIdx.add(idx); return; }\n  let jobs = [];\n  try {\n    if (src.ats === 'greenhouse') jobs = (body.jobs || []).map(j => ({\n      id: j.id, title: j.title, url: j.absolute_url, location: j.location?.name || '',\n      posted: j.first_published || j.updated_at || '', dept: (j.departments || []).map(d => d.name).join(', '),\n      desc: strip(j.content), detail: `https://boards-api.greenhouse.io/v1/boards/${src.slug}/jobs/${j.id}` }));\n    else if (src.ats === 'lever' || src.ats === 'lever-eu') jobs = (Array.isArray(body) ? body : (body.hostedUrl ? [body] : [])).map(j => ({ // n8n splits Lever's array into one item per job\n      id: j.id, title: j.text, url: j.hostedUrl, location: j.categories?.location || (j.categories?.allLocations || []).join(', '),\n      posted: j.createdAt ? new Date(j.createdAt).toISOString() : '', dept: [j.categories?.team, j.categories?.department].filter(Boolean).join(', '),\n      desc: '', detail: `https://api${src.ats === 'lever-eu' ? '.eu' : ''}.lever.co/v0/postings/${src.slug}/${j.id}` }));\n    else if (src.ats === 'ashby') jobs = (body.jobs || []).filter(j => j.isListed !== false).map(j => ({\n      id: j.id, title: j.title, url: j.jobUrl, location: [j.location, ...(j.secondaryLocations || []).map(l => l.location)].filter(Boolean).join(', ') + (j.isRemote ? ' (Remote)' : ''),\n      posted: j.publishedAt || '', dept: [j.department, j.team].filter(Boolean).join(', '),\n      desc: j.descriptionPlain || strip(j.descriptionHtml), detail: '' })); // Ashby has no single-posting endpoint; keep the list text\n    else if (src.ats === 'comeet') jobs = (Array.isArray(body) ? body : (body.uid && body.name ? [body] : [])).map(j => ({ // n8n splits Comeet's array too\n      id: j.uid, title: j.name, url: j.url_active_page, location: j.location?.name || '',\n      posted: j.time_updated || '', dept: j.department || '', level: j.experience_level || '',\n      desc: '', detail: `https://www.comeet.co/careers-api/2.0/company/${src.slug.split('|')[0]}/positions/${j.uid}?token=${src.slug.split('|')[1]}&details=true` }));\n    okIdx.add(idx);\n  } catch (e) { failIdx.add(idx); return; }\n\n  for (const j of jobs) {\n    if (!j.id || !j.title) continue;\n    const loc = j.location || '';\n    if (loc && !IL.test(loc) && !(REMOTE.test(loc) && !OTHER_COUNTRY.test(loc))) continue;\n    out.push({ json: {\n      job_id: `${src.ats}:${src.slug}:${j.id}`,\n      source: 'ats', company: src.company, company_type: src.type,\n      title: String(j.title).trim(), location: loc, url: j.url || '',\n      posted_at: j.posted || '', department: j.dept || '', level: j.level || '',\n      description: String(j.desc || '').slice(0, 4000), detail_url: j.detail || '',\n    } });\n  }\n});\n\nfeedsOk = okIdx.size; feedsFailed = [...failIdx].filter(i => !okIdx.has(i)).length;\nout.push({ json: { _meta: true, feeds_ok: feedsOk, feeds_failed: feedsFailed, jobs_in_scope: out.length } });\nreturn out;"
+      },
+      "id": "normalize-ats-jobs",
+      "name": "Normalize ATS Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Workday tenants: POST-only JSON API, 20 results per page, Israel applied as a location facet.\n// slug format in the Companies tab: tenant|datacenter|site|facetKey|facetId\n// Emits normalized job items for Workday, then passes the ATS items from Normalize straight through.\nconst helpers = this.helpers;\nconst passthrough = $input.all();\nconst MAX_PAGES = 25; // 500 postings per employer; NVIDIA is the largest at ~423\n\nlet companies = [];\ntry {\n  companies = $('Get Companies').all().map(i => i.json).filter(c => {\n    const active = String(c.active ?? 'yes').trim().toLowerCase();\n    return String(c.ats || '').trim().toLowerCase() === 'workday' && !['no', 'false', '0', 'off'].includes(active);\n  });\n} catch (e) { companies = []; }\n\nconst strip = s => String(s || '')\n  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '\"').replace(/&#39;|&rsquo;|&lsquo;/g, \"'\").replace(/&nbsp;/g, ' ')\n  .replace(/<br\\s*\\/?>|<\\/p>|<\\/li>|<\\/h\\d>/gi, '\\n').replace(/<[^>]+>/g, ' ')\n  .replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim();\n\nconst post = (url, body) => helpers.httpRequest({ url, method: 'POST', json: true, body, timeout: 20000,\n  headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36', 'Content-Type': 'application/json', 'Accept': 'application/json', 'Accept-Language': 'en-US' } });\n\nconst jobs = [];\nlet ok = 0, failed = 0;\nconst capped = [];\n\nasync function one(c) {\n  const parts = String(c.slug || '').split('|');\n  const [tenant, dc, site, facetKey, facetId] = parts;\n  if (!tenant || !dc || !site || !facetKey || !facetId) { failed++; return; }\n  const api = `https://${tenant}.${dc}.myworkdayjobs.com/wday/cxs/${tenant}/${site}`;\n  const ui = `https://${tenant}.${dc}.myworkdayjobs.com/en-US/${site}`;\n  let got = 0, total = null, page = 0;\n  try {\n    while (page < MAX_PAGES) {\n      const r = await post(`${api}/jobs`, { appliedFacets: { [facetKey]: [facetId] }, limit: 20, offset: page * 20, searchText: '' });\n      const batch = r.jobPostings || [];\n      if (total === null) total = r.total ?? null;\n      for (const j of batch) {\n        const path = j.externalPath || '';\n        const id = (Array.isArray(j.bulletFields) && j.bulletFields[0]) || path.split('/').pop() || path;\n        if (!id || !j.title) continue;\n        const rawLoc = String(j.locationsText || '').trim();\n        // every row here is already Israel-faceted, so make that explicit for the location filter downstream\n        const location = /israel/i.test(rawLoc) ? rawLoc : (rawLoc ? `${rawLoc} (Israel)` : 'Israel');\n        jobs.push({\n          job_id: `workday:${tenant}|${dc}|${site}:${id}`,\n          source: 'ats', company: c.company || tenant, company_type: c.type || '',\n          title: String(j.title).trim(), location, url: path ? `${ui}${path}` : ui,\n          posted_at: '', department: '', level: '',\n          description: '', detail_url: path ? `${api}${path}` : '',\n        });\n      }\n      got += batch.length;\n      page++;\n      if (batch.length < 20 || (total !== null && got >= total)) break;\n    }\n    if (page >= MAX_PAGES && total !== null && got < total) capped.push(`${c.company}:${got}/${total}`);\n    ok++;\n  } catch (e) { failed++; }\n}\n\nlet i = 0;\nasync function worker() { while (i < companies.length) await one(companies[i++]); }\nawait Promise.all(Array.from({ length: Math.min(3, Math.max(1, companies.length)) }, () => worker()));\n\nconst extra = [...jobs.map(j => ({ json: j })), { json: { _meta: true, feeds_ok: ok, feeds_failed: failed, jobs_in_scope: jobs.length, workday_capped: capped.join(', ') } }];\nreturn [...passthrough, ...extra];"
+      },
+      "id": "fetch-workday-jobs",
+      "name": "Fetch Workday Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        160
+      ],
+      "notes": "Workday boards are POST-only and paginate 20 at a time, so they cannot use the shared Fetch Feed node. This node queries each Workday tenant with its Israel location facet applied, emits normalized job items, and passes the ATS items through."
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Seen"
+        },
+        "options": {}
+      },
+      "id": "get-seen",
+      "name": "Get Seen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        340,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      },
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Drop jobs already in the Seen sheet, then cheap keyword screening before spending tokens on Claude.\nconst cfg = $('Config').first().json;\nconst seen = new Set($input.all().filter(i => String(i.json.tier || '').toUpperCase() !== 'ERROR').map(i => String(i.json.job_id || '').trim()).filter(Boolean));\nconst all = $('Fetch Workday Jobs').all().map(i => i.json); // ATS feeds passed through + Workday postings\nconst meta = { feeds_ok: 0, feeds_failed: 0, jobs_in_scope: 0 };\nfor (const m of all.filter(j => j._meta)) for (const k of Object.keys(meta)) if (m[k] != null) meta[k] += Number(m[k]);\nconst jobs = all.filter(j => j.job_id && j.title);\n\nconst ALLOW = /\\b(gtm|go[- ]to[- ]market|sdr|bdr|sales development|business development|account (executive|manager|representative)|customer success|partnerships?|revenue|marketing|growth|sales engineer|solutions? (engineer|specialist|consultant|architect)|revops|revenue operations|sales ops|sales operations|marketing ops|marketing operations|bizops|business operations|chief of staff|founder'?s? (associate|office))\\b/i; // commercial titles that may legitimately contain a NEG word (\"Sales Engineer\", \"SDR - Security\"). v6: student/junior/graduate no longer rescue a NEG title.\nconst SENIOR = /\\b(senior|sr\\.?|staff|principal|director|head|vp|vice president|chief|lead(er)?|manager|architect|expert|executive director|c[a-z]o|team lead)\\b/i; // always drop, whatever the function\nconst NEG = /\\b(engineer(ing)?|developer|programmer|devops|sre|scientist|research(er)?|designer|artist|writer|counsel|legal|attorney|recruit(er|ing)?|talent|people|hr|payroll|controller|accountant|bookkeep(er|ing)|fp&a|finops|treasury|collections?|actuar(y|ial)|underwrit(er|ing)|qa|tester|physician|nurse|driver|warehouse|technician|ux|ui|copywriter|video editor|animator|security|pentest|incident|grc|compliance|soc|threat|detection|dfir|forensics?|data platform|machine learning|ml\\b|algo|algorithms?|backend|back[- ]end|frontend|front[- ]end|full[- ]?stack|embedded|firmware|hardware|asic|fpga|rtl|dsp|verification|validation|v&v|physical design|analog|silicon|chip|compiler|kernel|ios|android|operator|control center)\\b/i; // drop unless ALLOW matches\nconst TITLE_POS = /\\b(sales|sdr|bdr|business development|revenue|revops|gtm|go[- ]to[- ]market|account (executive|development|representative|manager)|customer success|partnerships?|partner|student|intern|junior|entry|graduate|analyst|operations|ops|bizops|growth|marketing|enablement|solutions?|associate|coordinator|chief of staff|strategy|founder'?s? (associate|office)|pipeline|outbound|prospecting|lead generation|demand generation|market intelligence|customer|client|onboarding|implementation)\\b/i;\nconst DESC_POS = /\\b(sdr|bdr|sales development|business development representative|revenue operations|sales operations|go[- ]to[- ]market|gtm|student position|internship|entry[- ]level|0-[12] years|no experience required|clay|apollo\\.io|outbound prospecting)\\b/i;\nconst PRIORITY = /\\b(revops|revenue operations|sales ops|sales operations|marketing ops|marketing operations|bizops|business operations|gtm|go[- ]to[- ]market|chief of staff|strategy|analyst|bdr|business development|student|intern|junior|entry|graduate)\\b/i; // v7: ops and analyst titles sort ahead of pure SDR\n\nconst uniq = new Map();\nfor (const j of jobs) {\n  const id = String(j.job_id).trim();\n  if (seen.has(id) || uniq.has(id)) continue;\n  const t = j.title;\n  if (SENIOR.test(t) && !/\\b(student|intern(ship)?|junior)\\b/i.test(t) && !/chief of staff/i.test(t)) continue;\n  if (/^(senior|director|management|executive)/i.test(j.level || '') && !/\\b(student|intern(ship)?|junior)\\b/i.test(t)) continue; // Comeet experience_level\n  if (NEG.test(t) && !ALLOW.test(t)) continue; // engineering/back-office titles go, even when tagged student/junior/graduate\n  if (!TITLE_POS.test(t) && !DESC_POS.test((j.description || '').slice(0, 2500))) continue;\n  uniq.set(id, j);\n}\nlet cands = [...uniq.values()];\ncands.sort((a, b) => (PRIORITY.test(b.title) - PRIORITY.test(a.title)) || (a.source === 'ats' ? -1 : 1));\nconst cap = Number(cfg.max_to_score || 0); // 0 = no cap: every net-new posting is scored the day it appears\nconst overflow = cap > 0 ? Math.max(0, cands.length - cap) : 0;\nif (cap > 0) cands = cands.slice(0, cap);\n\nconst stats = { ...meta, seen_before: seen.size, new_after_dedupe: jobs.filter(j => !seen.has(String(j.job_id).trim())).length, sent_to_claude: cands.length, overflow };\nif (cands.length === 0) return [{ json: { none: true, stats } }];\nreturn cands.map(j => ({ json: { ...j, stats } }));"
+      },
+      "id": "dedupe-&-prefilter",
+      "name": "Dedupe & Prefilter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.none === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "any-candidates",
+      "name": "Any candidates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.detail_url || $json.url }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 6,
+              "batchInterval": 300
+            }
+          },
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-details",
+      "name": "Fetch Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        160
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Attach the full posting text (fetched per candidate) back onto each candidate. Falls back to whatever the list feed had.\nconst cands = $('Dedupe & Prefilter').all();\nconst strip = s => String(s || '')\n  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '\"').replace(/&#39;|&rsquo;|&lsquo;/g, \"'\").replace(/&nbsp;/g, ' ')\n  .replace(/<br\\s*\\/?>|<\\/p>|<\\/li>|<\\/h\\d>/gi, '\\n').replace(/<[^>]+>/g, ' ')\n  .replace(/[ \\t]+/g, ' ').replace(/\\n\\s*\\n+/g, '\\n').trim();\nreturn $input.all().map((item, i) => {\n  const p = item.pairedItem;\n  const idx = Array.isArray(p) ? p[0]?.item : (p?.item ?? i);\n  const c = { ...((cands[idx] || {}).json || {}) };\n  const b = item.json || {};\n  const ats = String(c.job_id || '').split(':')[0];\n  let desc = '';\n  try {\n    if (b.error) desc = '';\n    else if (ats === 'greenhouse') desc = strip(b.content);\n    else if (ats === 'comeet') desc = (b.details || []).map(d => `${d.name}\\n${strip(d.value)}`).join('\\n');\n    else if (ats === 'lever' || ats === 'lever-eu') desc = [b.descriptionPlain, ...(b.lists || []).map(l => `${l.text}\\n${strip(l.content)}`), b.additionalPlain].filter(Boolean).join('\\n');\n    else if (ats === 'workday') { const info = b.jobPostingInfo || {}; desc = [info.jobDescription ? strip(info.jobDescription) : '', info.timeType ? `Time type: ${info.timeType}` : '', info.jobRequisitionLocation?.descriptor ? `Location: ${info.jobRequisitionLocation.descriptor}` : ''].filter(Boolean).join('\\n'); }\n  } catch (e) { desc = ''; }\n  if (!desc) desc = c.description || '';\n  delete c.detail_url;\n  return { json: { ...c, description: String(desc).slice(0, 7000) } };\n});"
+      },
+      "id": "merge-details",
+      "name": "Merge Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the Anthropic Messages API request for each candidate posting.\nconst cfg = $('Config').first().json;\nconst SYSTEM = $('Config').first().json.system_prompt;\nreturn $input.all().map(item => {\n  const j = item.json;\n  const user = [\n    `COMPANY: ${j.company}${j.company_type ? ' (' + j.company_type + ')' : ''}`,\n    `TITLE: ${j.title}`,\n    `LOCATION: ${j.location || 'unspecified'}`,\n    `DEPARTMENT: ${j.department || 'unspecified'}`,\n    `SOURCE: ${j.source}`,\n    `POSTED: ${j.posted_at || 'unknown'}`,\n    `URL: ${j.url}`,\n    '',\n    'DESCRIPTION:',\n    j.description || '(no description available — score on title, company and location only, and say so in gap)',\n  ].join('\\n');\n  return { json: { ...j, body: {\n    model: cfg.model || 'claude-sonnet-5',\n    max_tokens: 4000,\n    system: SYSTEM,\n    messages: [{ role: 'user', content: user }],\n  } } };\n});"
+      },
+      "id": "prepare-claude-request",
+      "name": "Prepare Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 3,
+              "batchInterval": 600
+            }
+          },
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "score-with-claude",
+      "name": "Score with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        160
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge Claude's JSON verdict back onto the posting it scored.\nconst srcs = $('Prepare Claude Request').all();\nconst today = new Date().toISOString().slice(0, 10);\nconst out = [];\n$input.all().forEach((item, i) => {\n  const p = item.pairedItem;\n  const idx = Array.isArray(p) ? p[0]?.item : (p?.item ?? i);\n  const src = { ...((srcs[idx] || {}).json || {}) };\n  const stats = src.stats; delete src.body; delete src.stats;\n  let verdict = null, raw = '';\n  try {\n    raw = (item.json.content || []).map(c => c.text || '').join('') || item.json.text || '';\n    const cleaned = raw.replace(/```(?:json)?/gi, '').trim();\n    const start = cleaned.indexOf('{'), end = cleaned.lastIndexOf('}');\n    let body = cleaned.slice(start, end + 1);\n    // Claude sometimes puts raw line breaks / tabs inside string values, which strict JSON forbids\n    body = body.replace(/[\\u0000-\\u001f]+/g, ' ').replace(/[\\u201c\\u201d]/g, '\"').replace(/,\\s*([}\\]])/g, '$1');\n    verdict = JSON.parse(body);\n  } catch (e) { verdict = null; }\n  if (!verdict || item.json.error) {\n    const diag = item.json.error?.message || item.json.error\n      || (raw ? 'unparseable: ' + raw.slice(0, 200) : 'empty response: ' + JSON.stringify({ stop_reason: item.json.stop_reason, type: item.json.type, keys: Object.keys(item.json || {}) }).slice(0, 200));\n    verdict = { score: 0, tier: 'ERROR', role_family: '', seniority_read: '', why_fit: '', gap: 'Scoring failed: ' + diag, angle: '', disqualifier: '' };\n  }\n  const score = Math.max(0, Math.min(100, Math.round(Number(verdict.score) || 0)));\n  let tier = String(verdict.tier || '').toUpperCase();\n  if (tier !== 'ERROR') tier = score >= 70 ? 'HOT' : score >= 50 ? 'WARM' : 'SKIP';\n  out.push({ json: {\n    job_id: src.job_id, first_seen: today, company: src.company, title: src.title, location: src.location,\n    url: src.url, source: src.source, posted_at: src.posted_at, score, tier,\n    role_family: verdict.role_family || '', seniority_read: verdict.seniority_read || '',\n    why_fit: verdict.why_fit || '', gap: verdict.gap || '', angle: verdict.angle || '',\n    disqualifier: verdict.disqualifier || '', status: '', _stats: stats,\n  } });\n});\nreturn out;"
+      },
+      "id": "parse-scores",
+      "name": "Parse Scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Config').first().json.sheet_id }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Seen"
+        },
+        "options": {},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        }
+      },
+      "id": "append-to-seen",
+      "name": "Append to Seen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1660,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compose the morning digest. Works for both the scored path and the \"nothing new\" path.\nconst cfg = $('Config').first().json;\nconst items = $input.all().map(i => i.json);\nconst none = items.length && items[0].none;\nconst stats = (items[0] && (items[0].stats || items[0]._stats)) || {};\nconst scored = items.filter(i => i.job_id);\nconst hot = scored.filter(i => i.tier === 'HOT').sort((a, b) => b.score - a.score);\nconst warm = scored.filter(i => i.tier === 'WARM').sort((a, b) => b.score - a.score);\nconst skipped = scored.filter(i => i.tier === 'SKIP').length;\nconst errors = scored.filter(i => i.tier === 'ERROR').length;\nconst date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' });\nconst esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n\nconst card = (j, color) => `\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #e5e7eb;border-left:4px solid ${color};border-radius:8px;margin:0 0 12px 0;background:#fff\">\n<tr><td style=\"padding:14px 16px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif\">\n  <div style=\"font-size:16px;font-weight:600;color:#111827\"><a href=\"${esc(j.url)}\" style=\"color:#111827;text-decoration:none\">${esc(j.title)}</a> <span style=\"display:inline-block;font-size:12px;font-weight:600;color:#fff;background:${color};border-radius:10px;padding:2px 8px;vertical-align:middle\">${j.score}</span></div>\n  <div style=\"font-size:13px;color:#4b5563;margin-top:2px\">${esc(j.company)} · ${esc(j.location || 'location n/a')} · ${esc(j.role_family || '')}${j.seniority_read ? ' · ' + esc(j.seniority_read) : ''} · via ${esc(j.source)}</div>\n  <div style=\"font-size:14px;color:#111827;margin-top:10px\"><b>Why:</b> ${esc(j.why_fit)}</div>\n  <div style=\"font-size:14px;color:#111827;margin-top:4px\"><b>Gap:</b> ${esc(j.gap)}</div>\n  ${j.angle ? `<div style=\"font-size:14px;color:#111827;margin-top:4px\"><b>Lead with:</b> ${esc(j.angle)}</div>` : ''}\n  <div style=\"margin-top:10px\"><a href=\"${esc(j.url)}\" style=\"font-size:13px;color:#2563eb\">Open posting →</a></div>\n</td></tr></table>`;\n\nlet body;\nif (none || scored.length === 0) {\n  body = `<p style=\"font-size:15px;color:#111827\">Nothing new cleared the keyword screen today.</p>`;\n} else {\n  body = '';\n  body += hot.length ? `<h2 style=\"font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#b91c1c;margin:18px 0 8px\">Apply today (${hot.length})</h2>${hot.map(j => card(j, '#dc2626')).join('')}` : `<p style=\"font-size:14px;color:#6b7280\">No HOT matches today.</p>`;\n  body += warm.length ? `<h2 style=\"font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#b45309;margin:18px 0 8px\">Worth a look (${warm.length})</h2>${warm.map(j => card(j, '#d97706')).join('')}` : '';\n}\n\nconst html = `<!doctype html><html><body style=\"margin:0;background:#f3f4f6;padding:20px\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"640\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:640px;width:100%\">\n<tr><td style=\"font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:0 0 12px 0\">\n  <div style=\"font-size:20px;font-weight:700;color:#111827\">Job scan · ${esc(date)}</div>\n  <div style=\"font-size:13px;color:#6b7280;margin-top:2px\">${hot.length} hot · ${warm.length} warm · ${skipped} skipped${errors ? ' · ' + errors + ' scoring errors' : ''}</div>\n</td></tr>\n<tr><td>${body}</td></tr>\n<tr><td style=\"font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12px;color:#9ca3af;padding-top:16px;border-top:1px solid #e5e7eb\">\n  Scanned ${stats.feeds_ok ?? '?'} company feeds (${stats.feeds_failed ?? 0} failed) → ${stats.jobs_in_scope ?? '?'} Israel/remote postings. ${stats.new_after_dedupe ?? '?'} new since last run, ${stats.sent_to_claude ?? 0} scored${stats.overflow ? ', ' + stats.overflow + ' deferred to tomorrow (cap)' : ''}.\n  Full log and tracker: <a href=\"https://docs.google.com/spreadsheets/d/${esc(cfg.sheet_id)}\" style=\"color:#6b7280\">Seen sheet</a>.\n</td></tr>\n</table></td></tr></table></body></html>`;\n\nconst subject = (hot.length ? `🔥 ${hot.length} to apply today` : warm.length ? `${warm.length} worth a look` : 'Nothing new') + ` · job scan ${new Date().toISOString().slice(0, 10)}`;\nreturn [{ json: { subject, html, hot: hot.length, warm: warm.length } }];"
+      },
+      "id": "build-email",
+      "name": "Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Config').first().json.email_to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-digest",
+      "name": "Send Digest",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2120,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_ME",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Get Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Companies": {
+      "main": [
+        [
+          {
+            "node": "Build Feed URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Feed URLs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Feed": {
+      "main": [
+        [
+          {
+            "node": "Tag Feed Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Feed Items": {
+      "main": [
+        [
+          {
+            "node": "Normalize ATS Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize ATS Jobs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Workday Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Workday Jobs": {
+      "main": [
+        [
+          {
+            "node": "Get Seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Seen": {
+      "main": [
+        [
+          {
+            "node": "Dedupe & Prefilter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedupe & Prefilter": {
+      "main": [
+        [
+          {
+            "node": "Any candidates?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any candidates?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Details": {
+      "main": [
+        [
+          {
+            "node": "Merge Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Claude Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Claude Request": {
+      "main": [
+        [
+          {
+            "node": "Score with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score with Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Scores": {
+      "main": [
+        [
+          {
+            "node": "Append to Seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Seen": {
+      "main": [
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email": {
+      "main": [
+        [
+          {
+            "node": "Send Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jerusalem",
+    "saveExecutionProgress": true
+  },
+  "meta": {
+    "instanceId": "roy-job-scan"
+  },
+  "pinData": {}
+}
