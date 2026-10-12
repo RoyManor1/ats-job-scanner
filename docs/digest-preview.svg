@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="510" viewBox="0 0 960 510" role="img" aria-labelledby="title description">
+  <title id="title">Job Scanner: illustrative digest card</title>
+  <desc id="description">Fictional example, not a production email. A Growth Operations Associate role at Example Labs in Tel Aviv has a mock score of 78. The example explains the analytical and automation fit and flags a one-year experience requirement to check.</desc>
+  <rect width="960" height="510" rx="20" fill="#f4f7fb"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="42" y="45" fill="#52627a" font-size="12" font-weight="700" letter-spacing="1.5">JOB SCANNER · EXAMPLE DIGEST</text>
+    <text x="42" y="86" fill="#142640" font-size="30" font-weight="700">An opportunity, with context.</text>
+    <text x="42" y="116" fill="#52627a" font-size="15">Fictional company and role · mock assessment · illustrative layout</text>
+    <rect x="40" y="148" width="880" height="300" rx="12" fill="#fff" stroke="#d7dfeb"/>
+    <rect x="40" y="167" width="5" height="260" rx="2" fill="#3268b8"/>
+    <rect x="781" y="174" width="110" height="42" rx="21" fill="#e9f0fb"/>
+    <text x="836" y="200" text-anchor="middle" fill="#24508f" font-size="15" font-weight="700">78 / 100</text>
+    <text x="66" y="197" fill="#142640" font-size="22" font-weight="700">Growth Operations Associate</text>
+    <text x="66" y="225" fill="#52627a" font-size="15">Example Labs · Tel Aviv · Growth operations</text>
+    <line x1="66" y1="246" x2="892" y2="246" stroke="#e4e9f1"/>
+    <text x="66" y="276" fill="#24508f" font-size="12" font-weight="700" letter-spacing="1">WHY IT COULD FIT</text>
+    <text x="66" y="302" fill="#273b55" font-size="16">Combines funnel reporting, research and workflow automation.</text>
+    <text x="66" y="333" fill="#24508f" font-size="12" font-weight="700" letter-spacing="1">GAP TO CHECK</text>
+    <text x="66" y="359" fill="#273b55" font-size="16">The example posting requires one year in a growth operations role.</text>
+    <text x="66" y="411" fill="#3268b8" font-size="15" font-weight="600">Original posting link appears here in the real digest →</text>
+    <text x="42" y="482" fill="#52627a" font-size="13">A presentation example only. This is not a live vacancy, model result or final-release screenshot.</text>
+  </g>
+</svg>
