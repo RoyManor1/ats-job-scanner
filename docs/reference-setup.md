@@ -1,6 +1,6 @@
 # Run the September reference implementation
 
-This repository contains an earlier version of Job Scanner. It is useful for exploring the original integrations and workflow structure. It is **not the current October pilot export**; see [current status](current-status.md).
+This repository contains an earlier version of Job Scanner. It is useful for exploring the original integrations and workflow structure. It is **not the current live system export**; see [current status](current-status.md).
 
 ## Run the offline fixture check
 
@@ -14,7 +14,7 @@ node src/test_harness.js
 
 The harness reads `workflow/job-scanner.workflow.json`, executes selected workflow code paths against fixtures and mocked model responses, and finishes with `ALL CODE NODES PASS` on success. It also overwrites `docs/sample-digest.html` with its fixture output.
 
-That HTML is an older test artifact: it contains stub responses reused across different job titles. Its scores and explanations are not real recommendations. The README's [illustrative card](digest-preview.svg) is a separate, fictional presentation example.
+That HTML is an older test artifact: it contains stub responses reused across different job titles. Its scores and explanations are not real recommendations. The [illustrative card](digest-preview.svg) is a separate, fictional presentation example.
 
 ## Explore or configure the workflow
 
@@ -30,14 +30,14 @@ python3 src/make_export.example.py
 
 The generator writes `workflow/job-scanner.workflow.json`. The export example writes the ignored `workflow/job-scanner.local.json` with your configuration. Keep your identifiers and credentials out of commits.
 
-Import the local JSON into n8n and review the configuration before activation: recipient, model availability in your account, credentials, schedule, scoring prompt and assessment limits. The earlier export's unlimited scoring default does **not** provide the October pilot's $2 daily guard. Its filters are specific to the original Israel-focused search.
+Import the local JSON into n8n and review the configuration before activation: recipient, model availability in your account, credentials, schedule, scoring prompt and assessment limits. The earlier export's unlimited scoring default does **not** provide the live system's $2 per-run guard. Its filters are specific to the original Israel-focused search.
 
 The reference uses two Google Sheets tabs:
 
 - **Companies:** `company, ats, slug, type, active, il_jobs_on_scan_day, notes`
 - **Seen:** `job_id, first_seen, company, title, location, url, source, posted_at, score, tier, role_family, seniority_read, why_fit, gap, angle, disqualifier, status`
 
-The October pilot uses a broader record structure. Do not substitute this two-tab setup for the live pilot's schema.
+The live system uses a broader record structure. Do not substitute this two-tab setup for the live pilot's schema.
 
 ## Files
 
